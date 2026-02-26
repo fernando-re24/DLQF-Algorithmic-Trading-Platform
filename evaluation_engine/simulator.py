@@ -1,30 +1,24 @@
+
+"""
+Runs a trading simulation for a given model, outputting the model's performance
+in terms of the final portfolio value, capital history, and metrics.
+Author: Fernando Rivas Espinoza
+"""
+
 # Import libraries
 from sklearn.metrics import classification_report, confusion_matrix
-import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
+import torch
 import pandas as pd
 import numpy as np
 
+__all__ = ['Simulator', 'run_trading_sim']
+
 class Simulator:
 
-    def __init__(self, path_to_data: str, init_capital: float, model, trading_cost: float):
-        self.path_to_data = path_to_data
+    def __init__(self, init_capital: float, trading_cost: float):
         self.init_capital = init_capital
-        self.model = model
         self.trading_cost = trading_cost
-        
-    """
-    Load the data in from the path and convert it into a dataframe
-    Returns a dataframe with the prices of the stock basket
-
-    Will add additional processing 
-    """
-    def load_data(self) -> pd.DataFrame:
-        print("loading data...")
-
-        df = pd.read_csv(self.path_to_data)
-
-        return df
 
     """
     A buy and hold prediction for some hold
@@ -36,22 +30,34 @@ class Simulator:
         else:
             return 0
         
+
+    """
+    Compute model performance metrics after a simulation run
+    """
+    def compute_metrics(prices: pd.DataFrame, y: pd.DataFrame) -> dict:
+
+        #Compute a classification report and confusion matrix wiht sklearn
+        metrics = {}
+        metrics["classification_report"] = classification_report(prices, y, output_dict=True)
+        metrics["confusion_matrix"] = confusion_matrix(prices, y)
+
+        return metrics
+        
     """
     Runner for the simulation given our data and model.
 
     Return's the model's predicitons and metrics
     """
-    def run_trading_sim(self):
-        data = self.load_data()
+    def run_trading_sim(self, model, timestamps: pd.DataFrame, X: pd.DataFrame, y: pd.DataFrame, prices: pd.DataFrame) -> list[pd.DataFrame]:
         capital = self.init_capital
-        model = self.model
         cost = self.trading_cost
 
         # Dataframe storing the capital over time
-        capital_hist = data
+        capital_hist = y
+
+        for time in timestamps:
+            preditions = model()
+
     
-
-
-        #To be implemented
-        return capital, capital_hist
+        return y, capital_hist
 
