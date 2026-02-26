@@ -7,7 +7,6 @@ Author: Fernando Rivas Espinoza
 
 # Import libraries
 from sklearn.metrics import classification_report, confusion_matrix
-from datetime import datetime, timedelta
 import torch
 import pandas as pd
 import numpy as np

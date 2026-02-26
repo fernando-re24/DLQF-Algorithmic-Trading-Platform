@@ -5,16 +5,15 @@ Author: Fernando Rivas Espinoza
 
 # Imports
 import torch
-from torch.utils.data import TensorDataset, DataLoader
 import pandas as pd
 import numpy as np
 
 __all__ = ['Loader', 'load_model', 'load_data']
 
 class Loader:
-    def __init__(self, model, path_to_data):
+    def __init__(self, model, df: pd.DataFrame):
         self.model = model
-        self.path_to_data = path_to_data
+        self.df = df
      
     """ 
     Load the model with torch
@@ -38,7 +37,7 @@ class Loader:
 
         price_cols = ["Open", "Low", "High", "Close"]
         # Read from csv while parsing the timestamp column for datetimes
-        df = pd.read_csv(self.path_to_data, parse_dates = ["timestamp"])
+        df = self.df
 
         prices = df["Close"]
 
@@ -68,6 +67,8 @@ class Loader:
         print("Data loaded")
 
         return timestamps, X, prices, swings
+
+        
 
 
         

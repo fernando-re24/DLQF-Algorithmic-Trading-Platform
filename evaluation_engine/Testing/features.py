@@ -1,5 +1,5 @@
 """
-Add features to a single asset's time series
+Add features to a single asset's default time series
 Author: Fernando Rivas Espinoza
 """
 import pandas as pd
