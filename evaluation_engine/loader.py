@@ -61,7 +61,7 @@ class Loader:
                 case 1:
                     swings["prediction"].iloc(i) = 1
                 case 0: 
-                    swings["prediction"].iloc(i) = 1
+                    swings["prediction"].iloc(i) = 0
                 case -1:
                     swings["prediction"].iloc(i) = -1
 
