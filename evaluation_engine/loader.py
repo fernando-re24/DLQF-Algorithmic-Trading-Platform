@@ -15,7 +15,6 @@ class Loader:
     def __init__(self, model, path_to_data):
         self.model = model
         self.path_to_data = path_to_data
-
      
     """ 
     Load the model with torch
@@ -41,8 +40,7 @@ class Loader:
         # Read from csv while parsing the timestamp column for datetimes
         df = pd.read_csv(self.path_to_data, parse_dates = ["timestamp"])
 
-
-        prices = df[price_cols]
+        prices = df["Close"]
 
         # Set list of feature cokumns to all non price or timestamp columns
         features = [col for col in df.columns if not col in price_cols or col.startswith("timestamp")]
@@ -51,12 +49,25 @@ class Loader:
 
         timestamps = df.timestamp.values
 
-        # Empty y dataframe with the same timestamps as the index (adjusted for look-ahead later)
-        y = pd.DataFrame(index = timestamps, columns = ["pred_price"])
+        # Iterate through prices and classify price swings 
+        swings = y
+        for i in range(len(prices["Close"]) - 1):
+            curr_price = prices["close"].iloc(i)
+            next_price = prices["close"].iloc(i + 1)
+
+            #Calculate and normalize price cahange to get swing
+            price_diff = next_price - curr_price
+            match abs(price_diff)/price_diff :
+                case 1:
+                    swings["prediction"].iloc(i) = 1
+                case 0: 
+                    swings["prediction"].iloc(i) = 1
+                case -1:
+                    swings["prediction"].iloc(i) = -1
 
         print("Data loaded")
 
-        return timestamps, X, y, prices
+        return timestamps, X, prices, swings
 
 
         
