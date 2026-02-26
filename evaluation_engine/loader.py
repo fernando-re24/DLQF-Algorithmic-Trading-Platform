@@ -42,28 +42,28 @@ class Loader:
 
         prices = df["Close"]
 
-        # Set list of feature cokumns to all non price or timestamp columns
-        features = [col for col in df.columns if not col in price_cols or col.startswith("timestamp")]
+        # Set list of feature columns to all non price or timestamp columns
+        features = [col for col in df.columns if (col not in price_cols) and (not col.startswith("timestamp"))]
 
         X = df[features].values
 
         timestamps = df.timestamp.values
 
         # Iterate through prices and classify price swings 
-        swings = y
-        for i in range(len(prices["Close"]) - 1):
-            curr_price = prices["close"].iloc(i)
-            next_price = prices["close"].iloc(i + 1)
+        swings = pd.DataFrame(index = timestamps, columns= ["prediction"])
 
-            #Calculate and normalize price cahange to get swing
+        for i in range(len(prices) - 1):
+            curr_price = prices.iloc[i]
+            next_price = prices.iloc[i + 1]
+
+            #Calculate and normalize price change to get swing
             price_diff = next_price - curr_price
-            match abs(price_diff)/price_diff :
-                case 1:
-                    swings["prediction"].iloc(i) = 1
-                case 0: 
-                    swings["prediction"].iloc(i) = 0
-                case -1:
-                    swings["prediction"].iloc(i) = -1
+            swing = np.sign(price_diff)
+            swings["prediction"].iat[i] = swing
+
+        # Last timestamp has no look-ahead price; default to flat swing
+        if len(swings) > 0:
+            swings["prediction"].iat[-1] = 0
 
         print("Data loaded")
 
