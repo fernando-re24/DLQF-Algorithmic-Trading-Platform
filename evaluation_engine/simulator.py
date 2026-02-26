@@ -48,7 +48,7 @@ class Simulator:
 
     Return's the model's predicitons and metrics
     """
-    def run_trading_sim(self, model: torch.model, device :str, timestamps: pd.DataFrame, X: pd.DataFrame, prices: pd.DataFrame) -> list[pd.DataFrame]:
+    def run_trading_sim(self, model: torch.model, device :str, swings: list, X: pd.DataFrame, prices: pd.DataFrame) -> list[pd.DataFrame]:
         
         # Init our chash to the intial capital, position to 0 (0, flat, 1 long), trading cost to a local variable, y to empty list
         cash, position, cost, y = self.init_capital, 0.0, self.trading_cost, []
@@ -81,5 +81,8 @@ class Simulator:
             capital_hist.append(portfolio_val)
             y[i] = signal
         
-        return y, capital_hist
+        # Get metrics
+        metrics = self.compute_metrics(swings, y)
+
+        return y, capital_hist, metrics
 
