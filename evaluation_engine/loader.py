@@ -4,8 +4,6 @@ Author: Fernando Rivas Espinoza
 """
 
 # Imports
-from sklearn.metrics import classification_report, confusion_matrix
-from datetime import datetime, timedelta
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 import pandas as pd
