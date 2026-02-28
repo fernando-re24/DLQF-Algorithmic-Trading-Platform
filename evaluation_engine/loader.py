@@ -11,9 +11,10 @@ import numpy as np
 __all__ = ['Loader', 'load_model', 'load_data']
 
 class Loader:
-    def __init__(self, model, df: pd.DataFrame):
+    def __init__(self, model, df: pd.DataFrame, feature_script: str):
         self.model = model
         self.df = df
+        self.feature_script = feature_script
      
     """ 
     Load the model with torch
