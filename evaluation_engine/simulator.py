@@ -6,10 +6,13 @@ Author: Fernando Rivas Espinoza
 """
 
 # Import libraries
-from sklearn.metrics import classification_report, confusion_matrix
 import torch
 import pandas as pd
 import numpy as np
+
+# Import metrics script
+
+from .metrics import Metrics
 
 __all__ = ['Simulator', 'run_trading_sim']
 
@@ -31,7 +34,6 @@ class Simulator:
 
     """
     Shared execution engine for a stream of position signals (0 = flat, 1 = long)
-    returning (capital_history, final_value, total_return).
     """
     def _execute_signals(self, signals, prices):
         cash, position, cost = self.init_capital, 0.0, self.trading_cost
@@ -52,20 +54,7 @@ class Simulator:
         return capital_hist, final_value, total_return
         
 
-    """
-    Compute model performance metrics after a simulation run
-    """
-    def compute_metrics(self, swings: pd.DataFrame, y: pd.DataFrame) -> dict:
-
-        #Compute a classification report and confusion matrix with sklearn
-        metrics = {}
-        swings_true = np.asarray(swings).squeeze()
-        y_pred = np.asarray(y).squeeze()
-        metrics["classification_report"] = classification_report(swings_true, y_pred, output_dict=True)
-        metrics["confusion_matrix"] = confusion_matrix(swings_true, y_pred)
-
-        return metrics
-        
+    
     """
     Runner for the simulation given our data and model.
 
@@ -112,17 +101,20 @@ class Simulator:
         model_return = (model_final - self.init_capital) / self.init_capital
 
         # Get metrics and append comparison figures
-        metrics = self.compute_metrics(swings, y)
-        metrics.update({
-            "capital_history": capital_hist,
-            "final_value": model_final,
-            "total_return": model_return,
-            "buy_and_hold_capital_history": bh_capital_hist,
-            "buy_and_hold_final_value": bh_final,
-            "buy_and_hold_total_return": bh_return,
-            "outperformance_value": model_final - bh_final,
-            "outperformance_pct": model_return - bh_return
-        })
+        metrics = Metrics.compute_metrics(swings, y)
+      
+        metrics.update(
+            {
+                "capital_history": capital_hist,
+                "final_value": model_final,
+                "total_return": model_return,
+                "buy_and_hold_capital_history": bh_capital_hist,
+                "buy_and_hold_final_value": bh_final,
+                "buy_and_hold_total_return": bh_return,
+                "outperformance_value": model_final - bh_final,
+                "outperformance_pct": model_return - bh_return,
+            }
+        )
 
         return y, capital_hist, metrics
 
