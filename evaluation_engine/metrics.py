@@ -4,7 +4,6 @@ Author: Fernando Espinoza
 """
 # Import libraries
 from sklearn.metrics import classification_report, confusion_matrix
-import torch
 import pandas as pd
 import numpy as np
 
