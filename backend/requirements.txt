@@ -1,0 +1,6 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+PyJWT>=2.8
+cryptography>=42.0
+# boto3>=1.34  # uncomment when DynamoDB is wired up
+python-dotenv>=1.0
