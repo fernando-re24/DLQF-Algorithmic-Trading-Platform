@@ -3,4 +3,9 @@ from .loader import Loader
 from .vizualizations import Vizualizations
 
 __version__ = "0.1.0"
-__all__ = ['Simulator', 'Loader', 'Vizualizations']
+
+__all__ = [
+    'Simulator', 
+    'Loader', 
+    'Vizualizations'
+    ]

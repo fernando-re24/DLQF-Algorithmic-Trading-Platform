@@ -14,7 +14,10 @@ import numpy as np
 
 from .metrics import Metrics
 
-__all__ = ['Simulator', 'run_trading_sim']
+__all__ = [
+    'Simulator', 
+    'run_trading_sim',
+    ]
 
 class Simulator:
 
@@ -101,7 +104,7 @@ class Simulator:
         model_return = (model_final - self.init_capital) / self.init_capital
 
         # Get metrics and append comparison figures
-        metrics = Metrics.compute_metrics(swings, y)
+        metrics = Metrics().compute_metrics(swings, y, capital_hist=capital_hist, benchmark_capital_hist=bh_capital_hist)
       
         metrics.update(
             {
@@ -117,4 +120,3 @@ class Simulator:
         )
 
         return y, capital_hist, metrics
-
