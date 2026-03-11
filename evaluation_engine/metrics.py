@@ -18,8 +18,8 @@ class Metrics:
     """Compute Series Returns"""
     @staticmethod
     def series_returns(capital):
-            arr = np.asarray(capital, dtype=float)
-            if len(arr) < 2 or np.any(arr[:-1] == 0):
+            arr = np.asarray(capital, dtype=float).reshape(-1)
+            if arr.size < 2:
                 return np.array([])
             return np.divide(
                 np.diff(arr),
@@ -31,7 +31,7 @@ class Metrics:
     """Compute Max Drawdown"""
     @staticmethod
     def max_drawdown(capital):
-        arr = np.asarray(capital, dtype=float)
+        arr = np.asarray(capital, dtype=float).reshape(-1)
         if len(arr) == 0:
             return 0.0
         running_max = np.maximum.accumulate(arr)
@@ -41,6 +41,7 @@ class Metrics:
     """Compute Sharpe Ratio"""
     @staticmethod
     def sharpe(r, periods_per_year):
+        r = np.asarray(r).reshape(-1)
         if r.size == 0:
             return 0.0
         std = r.std(ddof=1)
@@ -51,6 +52,7 @@ class Metrics:
     """Compute sortinto"""
     @staticmethod
     def sortino(r, periods_per_year):
+        r = np.asarray(r).reshape(-1)
         if r.size == 0:
             return 0.0
         downside = r[r < 0]
@@ -64,7 +66,7 @@ class Metrics:
     """Compute cagr"""
     @staticmethod
     def cagr(capital, periods_per_year):
-        arr = np.asarray(capital, dtype=float)
+        arr = np.asarray(capital, dtype=float).reshape(-1)
         if len(arr) < 2 or arr[0] == 0:
             return 0.0
         years = (len(arr) - 1) / max(periods_per_year, 1e-12)
@@ -75,6 +77,7 @@ class Metrics:
     """Compute annualized volatility from per-bar returns."""
     @staticmethod
     def volatility(returns, periods_per_year):
+        returns = np.asarray(returns).reshape(-1)
         if returns.size == 0:
             return 0.0
         std = returns.std(ddof=1)
