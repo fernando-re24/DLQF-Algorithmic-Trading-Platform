@@ -78,9 +78,17 @@ class Simulator:
             with torch.no_grad():
                 # Get logits from x_row input with batch dimension
                 logits = model(torch.tensor(x_row, device=device).unsqueeze(0))
+                if logits.dim() < 2:
+                    raise ValueError("Model output must be at least 2D (batch, classes).")
 
                 # Get the trade signal from the logits by getting the maximum value and converting to int
-                signal = torch.argmax(logits, dim=1).item()
+                signal_idx = torch.argmax(logits, dim=1).item()
+                if logits.shape[1] == 3:
+                    signal = signal_idx - 1
+                elif logits.shape[1] == 2:
+                    signal = -1 if signal_idx == 0 else 1
+                else:
+                    signal = int(signal_idx)
 
             # +1 buy, -1 sell, 0 hold
             trade = signal - position
