@@ -1,0 +1,386 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dlqf.local/schemas/evaluation-engine-v1.json",
+  "type": "object",
+  "required": [
+    "request",
+    "response"
+  ],
+  "properties": {
+    "request": {
+      "$ref": "#/$defs/EvaluationRequest"
+    },
+    "response": {
+      "$ref": "#/$defs/EvaluationResponse"
+    },
+    "feature_script_metadata": {
+      "$ref": "#/$defs/FeatureScriptMetadata"
+    }
+  },
+  "$defs": {
+    "OHLCVDataFrame": {
+      "type": "object",
+      "required": [
+        "columns",
+        "rows"
+      ],
+      "properties": {
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "timestamp",
+            "Open",
+            "High",
+            "Low",
+            "Close",
+            "Volume"
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "timestamp",
+              "Open",
+              "High",
+              "Low",
+              "Close"
+            ],
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "Open": {
+                "type": "number"
+              },
+              "High": {
+                "type": "number"
+              },
+              "Low": {
+                "type": "number"
+              },
+              "Close": {
+                "type": "number"
+              },
+              "Volume": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "FeatureScriptInput": {
+      "type": "object",
+      "required": [
+        "script_path",
+        "raw_df"
+      ],
+      "properties": {
+        "script_path": {
+          "type": "string",
+          "description": "Absolute or relative path to the feature script."
+        },
+        "raw_df": {
+          "$ref": "#/$defs/OHLCVDataFrame"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Keyword args forwarded to build_features(df, **kwargs)."
+        },
+        "feature_fn": {
+          "type": "string",
+          "default": "build_features"
+        },
+        "strict": {
+          "type": "boolean",
+          "default": true
+        },
+        "max_runtime_sec": {
+          "type": "number",
+          "minimum": 0,
+          "default": 5
+        },
+        "non_numeric_whitelist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "FeatureScriptOutput": {
+      "type": "object",
+      "required": [
+        "columns",
+        "rows"
+      ],
+      "properties": {
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "FeatureScriptMetadata": {
+      "type": "object",
+      "required": [
+        "script_path",
+        "feature_fn",
+        "elapsed_sec",
+        "row_count",
+        "feature_count",
+        "warnings"
+      ],
+      "properties": {
+        "script_path": {
+          "type": ["string", "null"]
+        },
+        "feature_fn": {
+          "type": ["string", "null"]
+        },
+        "elapsed_sec": {
+          "type": "number"
+        },
+        "row_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "feature_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "EvaluationRequest": {
+      "type": "object",
+      "required": [
+        "model_path",
+        "df",
+        "init_capital",
+        "trading_cost"
+      ],
+      "properties": {
+        "model_path": {
+          "type": "string"
+        },
+        "df": {
+          "$ref": "#/$defs/OHLCVDataFrame"
+        },
+        "feature_script": {
+          "type": ["string", "null"]
+        },
+        "feature_fn": {
+          "type": "string",
+          "default": "build_features"
+        },
+        "feature_args": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        },
+        "strict_feature_validation": {
+          "type": "boolean",
+          "default": true
+        },
+        "max_feature_runtime_sec": {
+          "type": "number",
+          "minimum": 0,
+          "default": 5.0
+        },
+        "non_numeric_whitelist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "device": {
+          "type": "string",
+          "enum": [
+            "cpu",
+            "cuda"
+          ],
+          "default": "cpu"
+        },
+        "init_capital": {
+          "type": "number"
+        },
+        "trading_cost": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "EvaluationResponse": {
+      "type": "object",
+      "required": [
+        "timestamps",
+        "signals",
+        "capital_history",
+        "metrics"
+      ],
+      "properties": {
+        "timestamps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "enum": [
+              -1,
+              0,
+              1
+            ]
+          }
+        },
+        "capital_history": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "buy_and_hold_capital_history": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "final_value": {
+          "type": "number"
+        },
+        "total_return": {
+          "type": "number"
+        },
+        "buy_and_hold_final_value": {
+          "type": "number"
+        },
+        "buy_and_hold_total_return": {
+          "type": "number"
+        },
+        "outperformance_value": {
+          "type": "number"
+        },
+        "outperformance_pct": {
+          "type": "number"
+        },
+        "price_series_length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "metrics": {
+          "$ref": "#/$defs/MetricsPayload"
+        },
+        "feature_script_metadata": {
+          "$ref": "#/$defs/FeatureScriptMetadata"
+        }
+      },
+      "additionalProperties": true
+    },
+    "MetricsPayload": {
+      "type": "object",
+      "required": [
+        "classification_report",
+        "confusion_matrix",
+        "cagr",
+        "max_drawdown",
+        "sharpe",
+        "sortino",
+        "volatility"
+      ],
+      "properties": {
+        "classification_report": {
+          "type": "object"
+        },
+        "confusion_matrix": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "cagr": {
+          "type": "number"
+        },
+        "max_drawdown": {
+          "type": "number"
+        },
+        "sharpe": {
+          "type": "number"
+        },
+        "sortino": {
+          "type": "number"
+        },
+        "volatility": {
+          "type": "number"
+        },
+        "turnover": {
+          "type": "number"
+        },
+        "win_rate": {
+          "type": "number"
+        },
+        "average_trade_pl": {
+          "type": "number"
+        },
+        "profit_factor": {
+          "type": "number"
+        },
+        "return_series": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "benchmark_return_series": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "excess_return_series": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
