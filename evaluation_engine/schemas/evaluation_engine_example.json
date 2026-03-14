@@ -1,0 +1,137 @@
+{
+  "request": {
+    "model_path": "models/model.pt",
+    "df": {
+      "columns": [
+        "timestamp",
+        "Open",
+        "High",
+        "Low",
+        "Close",
+        "Volume"
+      ],
+      "rows": [
+        {
+          "timestamp": "2026-03-01T09:30:00Z",
+          "Open": 101.2,
+          "High": 102.4,
+          "Low": 100.8,
+          "Close": 101.9,
+          "Volume": 15420
+        },
+        {
+          "timestamp": "2026-03-01T09:31:00Z",
+          "Open": 101.9,
+          "High": 102.0,
+          "Low": 101.3,
+          "Close": 101.7,
+          "Volume": 9800
+        }
+      ]
+    },
+    "feature_script": "feature_scripts/build_features.py",
+    "feature_fn": "build_features",
+    "feature_args": {
+      "window": 14
+    },
+    "strict_feature_validation": true,
+    "max_feature_runtime_sec": 5.0,
+    "non_numeric_whitelist": [
+      "timestamp"
+    ],
+    "device": "cpu",
+    "init_capital": 100000,
+    "trading_cost": 0.05
+  },
+  "response": {
+    "timestamps": [
+      "2026-03-01T09:30:00Z",
+      "2026-03-01T09:31:00Z"
+    ],
+    "signals": [
+      1,
+      0
+    ],
+    "capital_history": [
+      100000.0,
+      100003.2
+    ],
+    "buy_and_hold_capital_history": [
+      100000.0,
+      100001.4
+    ],
+    "final_value": 100003.2,
+    "total_return": 0.000032,
+    "buy_and_hold_final_value": 100001.4,
+    "buy_and_hold_total_return": 0.000014,
+    "outperformance_value": 1.8,
+    "outperformance_pct": 0.000018,
+    "price_series_length": 2,
+    "metrics": {
+      "classification_report": {
+        "-1": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 1
+        },
+        "0": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 1
+        },
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 0
+        },
+        "accuracy": 0.5,
+        "macro avg": {
+          "precision": 0.6667,
+          "recall": 0.6667,
+          "f1-score": 0.6667,
+          "support": 2
+        },
+        "weighted avg": {
+          "precision": 0.5,
+          "recall": 0.5,
+          "f1-score": 0.5,
+          "support": 2
+        }
+      },
+      "confusion_matrix": [
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+      ],
+      "cagr": 0.0,
+      "max_drawdown": -0.0012,
+      "sharpe": 0.18,
+      "sortino": 0.2,
+      "volatility": 0.03,
+      "turnover": 0.5,
+      "win_rate": 0.5,
+      "average_trade_pl": 2.1,
+      "profit_factor": 1.4,
+      "return_series": [
+        0.000032
+      ],
+      "benchmark_return_series": [
+        0.000014
+      ],
+      "excess_return_series": [
+        0.000018
+      ]
+    }
+  },
+  "feature_script_metadata": {
+    "script_path": "feature_scripts/build_features.py",
+    "feature_fn": "build_features",
+    "elapsed_sec": 0.12,
+    "row_count": 2,
+    "feature_count": 8,
+    "warnings": []
+  }
+}
