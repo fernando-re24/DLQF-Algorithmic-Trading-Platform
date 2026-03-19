@@ -2,14 +2,15 @@
 Generate visualizations of a trading simulation.
 Author: Fernando Espinoza
 """
+
 from __future__ import annotations
 
-from typing import Any, Iterable, Mapping, Tuple
-from pathlib import Path
 import base64
+import html
 import io
 import json
-import html
+from pathlib import Path
+from typing import Any, Iterable, Mapping, Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -30,7 +31,11 @@ __all__ = [
 """
  Normalize incoming data to a pandas Series while preserving existing indexes.
 """
-def _as_series(data: pd.DataFrame | pd.Series | Iterable[float], name: str) -> pd.Series:
+
+
+def _as_series(
+    data: pd.DataFrame | pd.Series | Iterable[float], name: str
+) -> pd.Series:
     if isinstance(data, pd.Series):
         series = data.copy()
     elif isinstance(data, pd.DataFrame):
@@ -45,6 +50,11 @@ def _as_series(data: pd.DataFrame | pd.Series | Iterable[float], name: str) -> p
     return series
 
 
+"""
+Utility Method
+"""
+
+
 def _figure_to_base64_png(fig: plt.Figure, dpi: int = 160) -> str:
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=dpi, bbox_inches="tight")
@@ -53,11 +63,19 @@ def _figure_to_base64_png(fig: plt.Figure, dpi: int = 160) -> str:
     return encoded
 
 
+"""
+Utility Method
+"""
+
+
 def _metrics_to_html_pre(metrics: Mapping[str, Any]) -> str:
     serializable = json.loads(json.dumps(metrics, default=str))
     return f"<pre>{html.escape(json.dumps(serializable, indent=2, default=str))}</pre>"
 
+
 """Utility Method"""
+
+
 def _new_figure(title: str) -> Tuple[plt.Figure, plt.Axes]:
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.set_title(title)
@@ -73,8 +91,11 @@ class Vizualizations:
     -------
     fig, ax : matplotlib Figure and Axes with the line plot.
     """
+
     @staticmethod
-    def capital_hist(hist: pd.DataFrame | pd.Series | Iterable[float]) -> Tuple[plt.Figure, plt.Axes]:
+    def capital_hist(
+        hist: pd.DataFrame | pd.Series | Iterable[float],
+    ) -> Tuple[plt.Figure, plt.Axes]:
 
         series = _as_series(hist, "Capital")
         fig, ax = _new_figure("Capital History")
@@ -128,18 +149,26 @@ class Vizualizations:
         fig.tight_layout()
         return fig, ax
 
+    """Plot the signals (swing/position predictions) for one model."""
+
     @staticmethod
-    def signals(swings: pd.DataFrame | pd.Series | Iterable[float]) -> Tuple[plt.Figure, plt.Axes]:
+    def signals(
+        swings: pd.DataFrame | pd.Series | Iterable[float],
+    ) -> Tuple[plt.Figure, plt.Axes]:
         """Plot swing/position predictions (-1 sell, 0 hold, 1 buy) for one model."""
         series = _as_series(swings, "Signal")
         fig, ax = _new_figure("Model Signals")
-        ax.step(series.index, series.values, where="mid", label=series.name, color="#2ca02c")
+        ax.step(
+            series.index, series.values, where="mid", label=series.name, color="#2ca02c"
+        )
         ax.set_yticks([-1, 0, 1])
         ax.set_ylabel("Signal")
         ax.set_xlabel("Time")
         ax.legend(loc="best")
         fig.tight_layout()
         return fig, ax
+
+    """Plot and compare swing predictions for two runs."""
 
     @staticmethod
     def signals_comparison(
@@ -151,14 +180,28 @@ class Vizualizations:
         series1 = _as_series(swings1, labels[0])
         series2 = _as_series(swings2, labels[1])
         fig, ax = _new_figure("Signal Comparison")
-        ax.step(series1.index, series1.values, where="mid", label=series1.name, color="#2ca02c")
-        ax.step(series2.index, series2.values, where="mid", label=series2.name, color="#d62728")
+        ax.step(
+            series1.index,
+            series1.values,
+            where="mid",
+            label=series1.name,
+            color="#2ca02c",
+        )
+        ax.step(
+            series2.index,
+            series2.values,
+            where="mid",
+            label=series2.name,
+            color="#d62728",
+        )
         ax.set_yticks([-1, 0, 1])
         ax.set_ylabel("Signal")
         ax.set_xlabel("Time")
         ax.legend(loc="best")
         fig.tight_layout()
         return fig, ax
+
+    """Plot and compare swing predictions for multiple runs."""
 
     @staticmethod
     def signals_comparison_suite(
@@ -187,10 +230,15 @@ class Vizualizations:
         fig.tight_layout()
         return fig, ax
 
+    """Save a figure to a file and return the file path."""
+
     @staticmethod
     def save_figure(fig: plt.Figure, file_path: str | Path, dpi: int = 160) -> str:
         fig.savefig(str(file_path), dpi=dpi, bbox_inches="tight")
         return str(file_path)
+
+
+"""Convert a figure to an HTML string for embedding in a web page."""
 
 
 def figure_to_html(fig: plt.Figure, title: str | None = None) -> str:
@@ -199,9 +247,12 @@ def figure_to_html(fig: plt.Figure, title: str | None = None) -> str:
     return f"""
     <figure>
       {caption}
-      <img src="data:image/png;base64,{encoded}" alt="{title or 'Figure'}" />
+      <img src="data:image/png;base64,{encoded}" alt="{title or "Figure"}" />
     </figure>
     """
+
+
+"""Convert a figure to an HTML string for embedding in a web page."""
 
 
 def figure_to_html_report(
@@ -228,9 +279,7 @@ def figure_to_html_report(
     if benchmark_metrics:
         bench_parts = []
         for name, values in benchmark_metrics.items():
-            bench_parts.append(
-                f"<h4>{name}</h4>\n{_metrics_to_html_pre(values)}"
-            )
+            bench_parts.append(f"<h4>{name}</h4>\n{_metrics_to_html_pre(values)}")
         bench_json = "<div>" + "\n".join(bench_parts) + "</div>"
 
     html = f"""
