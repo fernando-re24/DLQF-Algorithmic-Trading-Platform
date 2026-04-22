@@ -2,6 +2,14 @@
 frontend/.next/
 frontend/node_modules/
 
+# OS junk
+.DS_Store
+
+# Local prototype archives + stray files
+DLQF Platform.zip
+strategy.zip
+strategy.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
