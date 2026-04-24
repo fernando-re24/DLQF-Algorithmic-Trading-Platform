@@ -1,23 +1,29 @@
 """
 JWT verification using Supabase JWKS.
 
-Supabase issues RS256 JWTs. Public keys are fetched from:
-  ${SUPABASE_URL}/auth/v1/keys
+Supabase's new JWT Signing Keys issue ES256 JWTs. Public keys are fetched from:
+  ${SUPABASE_URL}/auth/v1/.well-known/jwks.json
 
-PyJWKClient caches keys in-process and re-fetches on cache miss (handles
-key rotation automatically). The `sub` claim becomes the platform user_id.
+That endpoint requires the project's anon key as an `apikey` header. PyJWKClient
+caches keys in-process and re-fetches on cache miss (handles key rotation
+automatically). The `sub` claim becomes the platform user_id.
 """
 import os
 
 import jwt
-from jwt import PyJWKClient
+from jwt import PyJWKClient, PyJWKClientError
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 SUPABASE_URL = os.environ["SUPABASE_URL"].rstrip("/")
-JWKS_URL = f"{SUPABASE_URL}/auth/v1/keys"
+SUPABASE_ANON_KEY = os.environ["SUPABASE_ANON_KEY"]
+JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
 
-_jwks_client = PyJWKClient(JWKS_URL, cache_keys=True)
+_jwks_client = PyJWKClient(
+    JWKS_URL,
+    cache_keys=True,
+    headers={"apikey": SUPABASE_ANON_KEY},
+)
 _bearer = HTTPBearer()
 
 
@@ -39,15 +45,15 @@ def get_current_user(
         payload = jwt.decode(
             token,
             signing_key.key,
-            algorithms=["RS256"],
+            algorithms=["ES256"],
             # audience verification skipped for MVP — enable once you configure
             # the JWT audience in Supabase dashboard
             options={"verify_aud": False},
-            issuer=SUPABASE_URL,
+            issuer=f"{SUPABASE_URL}/auth/v1",
         )
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError as exc:
+    except (jwt.InvalidTokenError, PyJWKClientError) as exc:
         raise HTTPException(status_code=401, detail=f"Invalid token: {exc}")
 
     return {
