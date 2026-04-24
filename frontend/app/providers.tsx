@@ -1,6 +1,7 @@
 'use client';
 
 import { SWRConfig } from 'swr';
+import { AuthProvider } from '@/lib/auth-context';
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
@@ -10,14 +11,16 @@ const fetcher = async (url: string) => {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SWRConfig
-      value={{
-        fetcher,
-        revalidateOnFocus: false,
-        dedupingInterval: 2000,
-      }}
-    >
-      {children}
-    </SWRConfig>
+    <AuthProvider>
+      <SWRConfig
+        value={{
+          fetcher,
+          revalidateOnFocus: false,
+          dedupingInterval: 2000,
+        }}
+      >
+        {children}
+      </SWRConfig>
+    </AuthProvider>
   );
 }

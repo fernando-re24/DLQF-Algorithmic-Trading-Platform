@@ -1,10 +1,24 @@
 type Props = {
-  status: 'queued' | 'running' | 'completed' | 'failed';
+  status: 'pending_upload' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
   progress?: number;
   queuePos?: number;
 };
 
 export function StatusBadge({ status, progress, queuePos }: Props) {
+  if (status === 'pending_upload') {
+    return (
+      <span className="badge badge-queued">
+        <span className="dot" aria-hidden="true"></span>PENDING UPLOAD
+      </span>
+    );
+  }
+  if (status === 'cancelled') {
+    return (
+      <span className="badge badge-failed">
+        <span className="dot" aria-hidden="true"></span>CANCELLED
+      </span>
+    );
+  }
   if (status === 'running') {
     return (
       <span className="badge badge-running">

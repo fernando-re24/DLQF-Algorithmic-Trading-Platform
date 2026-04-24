@@ -1,61 +1,178 @@
 'use client';
 
-import { useState, type ChangeEvent, type DragEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 import { Icon } from '@/components/Icon';
+import { api, uploadZipToS3 } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 
-type FileMeta = { name: string; size: string };
+type Props = {
+  projectId: string;
+  onJobCreated?: (jobId: string) => void;
+  readOnly?: boolean;
+};
 
-export function UploadDropzone() {
+const MAX_BYTES = 50 * 1024 * 1024;
+
+function validateFile(f: File): string | null {
+  const isZip =
+    f.type === 'application/zip' ||
+    f.type === 'application/x-zip-compressed' ||
+    f.name.toLowerCase().endsWith('.zip');
+  if (!isZip) return 'Only .zip files are accepted.';
+  if (f.size > MAX_BYTES) return 'File exceeds 50 MB limit.';
+  if (f.size === 0) return 'File is empty.';
+  return null;
+}
+
+export function UploadDropzone({ projectId, onJobCreated, readOnly = false }: Props) {
+  const router = useRouter();
+  const { session } = useAuth();
   const [drag, setDrag] = useState(false);
-  const [file, setFile] = useState<FileMeta | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadPct, setUploadPct] = useState(0);
+  const [phase, setPhase] = useState<'idle' | 'creating' | 'uploading' | 'confirming' | 'error'>(
+    'idle',
+  );
+  const [error, setError] = useState<string | null>(null);
+  const dragDepth = useRef(0);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const toMeta = (f: File): FileMeta => ({
-    name: f.name,
-    size: (f.size / (1024 * 1024)).toFixed(1) + ' MB',
-  });
+  const openPicker = () => {
+    if (uploading || readOnly) return;
+    inputRef.current?.click();
+  };
+
+  const sizeLabel = file ? (file.size / (1024 * 1024)).toFixed(1) + ' MB' : '';
+
+  const acceptFile = (f: File) => {
+    const err = validateFile(f);
+    if (err) {
+      setError(err);
+      setPhase('error');
+      setFile(null);
+      return;
+    }
+    setError(null);
+    setPhase('idle');
+    setFile(f);
+  };
+
+  const onDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    if (readOnly) return;
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepth.current += 1;
+    if (e.dataTransfer?.types?.includes('Files')) setDrag(true);
+  };
+
+  const onDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const onDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setDrag(false);
+  };
 
   const onDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    dragDepth.current = 0;
     setDrag(false);
+    if (readOnly) return;
     const f = e.dataTransfer.files?.[0];
-    if (f) setFile(toMeta(f));
+    if (f) acceptFile(f);
   };
 
   const onPick = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) setFile(toMeta(f));
+    if (f) acceptFile(f);
   };
 
-  const startUpload = () => {
-    setUploading(true);
+  const reset = () => {
+    setFile(null);
     setUploadPct(0);
-    const t = setInterval(() => {
-      setUploadPct((p) => {
-        if (p >= 100) {
-          clearInterval(t);
-          setUploading(false);
-          setFile(null);
-          return 0;
-        }
-        return p + 3 + Math.random() * 4;
-      });
-    }, 80);
+    setPhase('idle');
+    setError(null);
   };
+
+  const startUpload = async () => {
+    if (!file) return;
+    if (!session) {
+      router.push(`/sign-in?next=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+    setUploadPct(0);
+
+    try {
+      setPhase('creating');
+      const { job, upload } = await api.createJob(projectId);
+
+      setPhase('uploading');
+      await uploadZipToS3(upload, file, (pct) => setUploadPct(pct));
+
+      setPhase('confirming');
+      await api.confirmUpload(job.job_id);
+
+      onJobCreated?.(job.job_id);
+      reset();
+    } catch (e: any) {
+      console.error('[upload] failed', e);
+      setError(e?.message ?? 'Upload failed');
+      setPhase('error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const phaseLabel =
+    phase === 'creating'
+      ? 'Creating job...'
+      : phase === 'uploading'
+        ? `Uploading · ${uploadPct.toFixed(0)}%`
+        : phase === 'confirming'
+          ? 'Enqueueing...'
+          : '';
 
   return (
     <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".zip,application/zip,application/x-zip-compressed"
+        style={{ display: 'none' }}
+        onChange={onPick}
+      />
       <div
         className={`dropzone ${drag ? 'drag' : ''}`}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDrag(true);
-        }}
-        onDragLeave={() => setDrag(false)}
+        onDragEnter={onDragEnter}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
         onDrop={onDrop}
-        role="region"
-        aria-label="Upload strategy zip"
+        onClick={file || readOnly ? undefined : openPicker}
+        onKeyDown={(e) => {
+          if (file || readOnly) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openPicker();
+          }
+        }}
+        role="button"
+        tabIndex={file || readOnly ? -1 : 0}
+        aria-disabled={readOnly || undefined}
+        aria-label="Upload strategy zip — click or drop a .zip file"
+        style={{
+          cursor: readOnly ? 'default' : file || uploading ? 'default' : 'pointer',
+        }}
       >
         <div className="dropzone-icon">
           <Icon name="upload" size={20} />
@@ -64,7 +181,7 @@ export function UploadDropzone() {
           <>
             <div style={{ fontSize: 14, fontWeight: 500 }}>{file.name}</div>
             <div className="mono" style={{ fontSize: 11, color: 'var(--fg-2)', marginTop: 4 }}>
-              {file.size}
+              {sizeLabel}
             </div>
             {uploading && (
               <div style={{ marginTop: 16, maxWidth: 360, margin: '16px auto 0' }}>
@@ -85,30 +202,52 @@ export function UploadDropzone() {
                     }}
                   />
                 </div>
-                <div className="mono" style={{ fontSize: 11, color: 'var(--fg-2)', marginTop: 6 }}>
-                  Uploading · {uploadPct.toFixed(0)}%
+                <div
+                  className="mono"
+                  style={{ fontSize: 11, color: 'var(--fg-2)', marginTop: 6 }}
+                >
+                  {phaseLabel}
                 </div>
+              </div>
+            )}
+            {error && (
+              <div
+                className="mono"
+                style={{ marginTop: 12, color: 'var(--neg)', fontSize: 11 }}
+              >
+                {error}
               </div>
             )}
           </>
         ) : (
           <>
-            <div style={{ fontSize: 14, fontWeight: 500 }}>Drop strategy.zip here</div>
+            <div style={{ fontSize: 14, fontWeight: 500 }}>
+              {drag ? 'Release to upload' : 'Drop strategy.zip here'}
+            </div>
             <div style={{ color: 'var(--fg-2)', fontSize: 12, marginTop: 4 }}>
               or{' '}
-              <label style={{ color: 'var(--fg-0)', textDecoration: 'underline', cursor: 'pointer' }}>
+              <span
+                style={{ color: 'var(--fg-0)', textDecoration: 'underline' }}
+              >
                 browse files
-                <input type="file" accept=".zip" style={{ display: 'none' }} onChange={onPick} />
-              </label>{' '}
+              </span>{' '}
               · max 50 MB
             </div>
+            {error && (
+              <div
+                className="mono"
+                style={{ marginTop: 12, color: 'var(--neg)', fontSize: 11 }}
+              >
+                {error}
+              </div>
+            )}
           </>
         )}
       </div>
 
       {file && !uploading && (
         <div style={{ marginTop: 18, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-          <button type="button" className="btn" onClick={() => setFile(null)}>
+          <button type="button" className="btn" onClick={reset}>
             Cancel
           </button>
           <button type="button" className="btn btn-primary" onClick={startUpload}>

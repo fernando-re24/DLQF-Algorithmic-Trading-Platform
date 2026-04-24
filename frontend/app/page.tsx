@@ -4,8 +4,6 @@ import { AnimatedLineChart } from '@/components/charts/AnimatedLineChart';
 import { Sparkline } from '@/components/charts/Sparkline';
 import { genEquity } from '@/lib/chart-utils';
 
-const PROJECT = 'spring-2026';
-
 export default function LandingPage() {
   const heroEquity = genEquity(42, 140, 1.0, 0.01, 0.0012);
   const leaderboardEquity = [
@@ -55,10 +53,10 @@ export default function LandingPage() {
               out-of-sample market regime. Generalization is the only alpha that matters.
             </p>
             <div className="h-row" style={{ gap: 10 }}>
-              <Link href={`/projects/${PROJECT}/jobs`} className="btn btn-primary">
+              <Link href="/challenge" className="btn btn-primary">
                 View Active Challenge <Icon name="arrow_right" size={14} />
               </Link>
-              <Link href={`/projects/${PROJECT}/jobs/new`} className="btn">
+              <Link href="/submit" className="btn">
                 <Icon name="upload" size={14} /> Submit Strategy
               </Link>
             </div>
@@ -263,10 +261,10 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="h-row">
-            <Link href={`/projects/${PROJECT}/leaderboard`} className="btn">
+            <Link href="/leaderboard" className="btn">
               View leaderboard
             </Link>
-            <Link href={`/projects/${PROJECT}/jobs/new`} className="btn btn-primary">
+            <Link href="/submit" className="btn btn-primary">
               Submit strategy <Icon name="arrow_right" size={14} />
             </Link>
           </div>

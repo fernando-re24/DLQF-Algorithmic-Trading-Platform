@@ -8,23 +8,19 @@ type NavItem = { href: string; label: string; icon: IconName; match?: RegExp };
 
 const PLATFORM: NavItem[] = [{ href: '/', label: 'Home', icon: 'home', match: /^\/$/ }];
 
-const CHALLENGE = (projectId: string): NavItem[] => [
-  { href: `/projects/${projectId}/jobs`, label: 'Challenge', icon: 'trophy', match: new RegExp(`^/projects/${projectId}/jobs/?$`) },
-  { href: `/projects/${projectId}/jobs/new`, label: 'Submit', icon: 'upload' },
-  { href: `/projects/${projectId}/leaderboard`, label: 'Leaderboard', icon: 'chart' },
+const CHALLENGE: NavItem[] = [
+  { href: '/challenge', label: 'Challenge', icon: 'trophy', match: /^\/challenge(\/.*)?$/ },
+  { href: '/submit', label: 'Submit', icon: 'upload', match: /^\/submit(\/.*)?$/ },
+  { href: '/leaderboard', label: 'Leaderboard', icon: 'chart', match: /^\/leaderboard(\/.*)?$/ },
 ];
 
-type Props = { projectId?: string };
-
-export function Sidebar({ projectId = 'spring-2026' }: Props) {
+export function Sidebar() {
   const pathname = usePathname() ?? '/';
 
   const isActive = (item: NavItem) => {
     if (item.match) return item.match.test(pathname);
     return pathname.startsWith(item.href);
   };
-
-  const challenge = CHALLENGE(projectId);
 
   return (
     <aside className="sidebar">
@@ -46,7 +42,7 @@ export function Sidebar({ projectId = 'spring-2026' }: Props) {
           </Link>
         ))}
         <div className="nav-section">Spring 2026 Challenge</div>
-        {challenge.map((n) => (
+        {CHALLENGE.map((n) => (
           <Link key={n.href} href={n.href} className={`nav-item ${isActive(n) ? 'active' : ''}`}>
             <Icon name={n.icon} size={15} />
             <span>{n.label}</span>

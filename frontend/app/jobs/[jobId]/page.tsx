@@ -57,7 +57,7 @@ export default function JobDetailPage({ params }: { params: { jobId: string } })
       >
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <Link href="/projects/spring-2026/jobs/new" className="btn btn-sm btn-ghost">
+            <Link href="/submit" className="btn btn-sm btn-ghost">
               <span style={{ display: 'inline-block' }}>←</span> Back
             </Link>
             <span className="mono" style={{ fontSize: 11, color: 'var(--fg-2)' }}>

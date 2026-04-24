@@ -1,5 +1,10 @@
+'use client';
+
 import { Fragment, type ReactNode } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Icon } from '@/components/Icon';
+import { useAuth } from '@/lib/auth-context';
 
 type Props = {
   crumbs: string[];
@@ -7,6 +12,14 @@ type Props = {
 };
 
 export function Topbar({ crumbs, actions }: Props) {
+  const { session, signOut } = useAuth();
+  const router = useRouter();
+
+  const onSignOut = async () => {
+    await signOut();
+    router.replace('/');
+  };
+
   return (
     <header className="topbar">
       <div className="crumb" aria-label="Breadcrumb">
@@ -32,6 +45,24 @@ export function Topbar({ crumbs, actions }: Props) {
         <button type="button" className="btn btn-ghost btn-sm" aria-label="Search">
           <Icon name="search" size={14} /> <span className="kbd">⌘K</span>
         </button>
+        {session ? (
+          <>
+            <span
+              className="mono"
+              style={{ fontSize: 11, color: 'var(--fg-2)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              title={session.user.email ?? ''}
+            >
+              {session.user.email}
+            </span>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={onSignOut}>
+              Sign out
+            </button>
+          </>
+        ) : (
+          <Link href="/sign-in" className="btn btn-primary btn-sm">
+            Sign in
+          </Link>
+        )}
       </div>
     </header>
   );
