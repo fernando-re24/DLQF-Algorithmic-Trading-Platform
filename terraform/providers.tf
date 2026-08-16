@@ -22,10 +22,10 @@ terraform {
 }
 
 locals {
-    required_tags = {
-        project = "trading_competition_platform"
-        managed-by = "terraform"
-    }
+  required_tags = {
+    project    = "trading_competition_platform"
+    managed-by = "terraform"
+  }
 }
 
 provider "aws" {
